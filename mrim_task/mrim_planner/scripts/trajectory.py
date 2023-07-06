@@ -53,7 +53,7 @@ class Trajectory:
         poses = []
         for seg in self.segments:
             poses = poses + seg.poses
-        return poses
+        return poses    
     # # #}
 
     # # #{ delaySegment()
@@ -191,7 +191,6 @@ class TrajectoryUtils():
 
             # include start node
             wps_interp.append(subtraj[0])
-
             # interpolate headings
             for i in range(1, len(subtraj) - 1):
 
@@ -204,17 +203,19 @@ class TrajectoryUtils():
                 #  - interpolate the heading linearly (create a function of distance between two points of the subpath)
                 #  - do not forget to wrap angle to (-pi, pi) (see/use wrapAngle() in utils.py)
                 #  - see/use distEuclidean() in utils.py
-
+                
                 # [STUDENTS TODO] Change variable 'desired_heading', nothing else
-                desired_heading = waypoints[0].heading
-
+                desired_heading = wrapAngle(current_heading + distEuclidean(subtraj_1, subtraj_0) * delta_heading / subtraj_len)
+                
                 # replace heading
-                current_heading   = desired_heading
+                current_heading   = desired_heading 
                 wp         = subtraj[i]
                 wp.heading = desired_heading
                 wps_interp.append(wp)
 
-        # include the very last node
+            to_change_heading = desired_heading
+
+
         wps_interp.append(waypoints[-1])
 
         return wps_interp
@@ -244,12 +245,32 @@ class TrajectoryUtils():
         trajectory_part_time = 0
         # acc = 0 # no jeck jet
         dist_total = distEuclidean(start, stop)
-        #print("dist_total", dist_total)
+        
+        dist = stop.point.asArray() - start.point.asArray()
+        vec = abs(dist / np.array(self.max_velocity))
+        
+        if vec[0] >= vec[1] and vec[0] >= vec[2]:
+            ax_vel = abs(dist / vec[0])
+            ax_acc = np.array(self.max_acceleration) * abs(ax_vel / max(ax_vel)) 
+        elif vec[1] >= vec[0] and vec[1] >= vec[2]:
+            ax_vel = abs(dist / vec[1])
+            ax_acc = np.array(self.max_acceleration) * abs(ax_vel / max(ax_vel)) 
+        elif vec[2] >= vec[0] and vec[2] >= vec[1]:
+            ax_vel = abs(dist / vec[2])
+            ax_acc = np.array(self.max_acceleration) * abs(ax_vel / max(ax_vel)) 
 
         # [STUDENTS TODO] Rework the method to per-axis computation if you want to exploit the allowed dynamics in all axes
         # Set minimal velocity/acceleration to the axis limit with minimal constraint
-        min_ax_vel = min(self.max_velocity)
-        min_ax_acc = min(self.max_acceleration)
+
+
+        #minim = -0.5/
+        min_ax_vel = np.sqrt(np.sum(ax_vel**2))
+        min_ax_acc = np.sqrt(np.sum(ax_acc**2))
+
+        # min_ax_vel = min(self.max_velocity)
+        # min_ax_acc = min(self.max_acceleration)
+
+
 
         time_from_init_to_max_vel  = (min_ax_vel - init_velocity) / min_ax_acc
         time_from_max_to_final_vel = (min_ax_vel - final_velocity) / min_ax_acc
@@ -391,7 +412,7 @@ class TrajectoryUtils():
             if final_velocity == 0 and poses[-1] != stop:
                 poses.append(stop)
                 #print("t last", "v", 0, "s", dist_total)
-
+        
         return poses, trajectory_part_time
     # #}
 
@@ -454,13 +475,15 @@ class TrajectoryUtils():
             sampling_step = trajectory.dT
 
             # STUDENTS TODO: Sample the path parametrization 'toppra_trajectory' (instance of TOPPRA library).
-            raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
+            #raise NotImplementedError('[STUDENTS TODO] Trajectory sampling not finished. You have to implement it on your own.')
             # Tips:
             #  - check code examples for TOPPRA (look for eval() function): https://hungpham2511.github.io/toppra/index.html
             #  - use 'toppra_trajectory' and the predefined sampling step 'sampling_step'
+            ts_sample = np.arange(0, toppra_trajectory.duration, sampling_step)
 
-            samples = [] # [STUDENTS TODO] Fill this variable with trajectory samples
-
+            print('WE ARE HERE!')
+            #ts_sample = np.linspace(0, sampling_step, 150) 
+            samples = toppra_trajectory.eval(ts_sample) # [STUDENTS TODO] Fill this variable with trajectory samples
             # Convert to Trajectory class
             poses      = [Pose(q[0], q[1], q[2], q[3]) for q in samples]
             trajectory = self.posesToTrajectory(poses)
@@ -613,7 +636,7 @@ class TrajectoryUtils():
         ## |  [COLLISION AVOIDANCE METHOD #2]: Delay UAV with shorter trajectory at start until there is no collision occurring  |
         elif method == 'delay_till_no_collisions_occur':
 
-            raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
+            #raise NotImplementedError('[STUDENTS TODO] Collision prevention method \'delay_till_no_collisions_occur\' not finished. You have to finish it on your own.')
             # Tips:
             #  - you might select which trajectory it is better to delay
             #  - the smallest delay step is the sampling step stored in variable 'self.dT'

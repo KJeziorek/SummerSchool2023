@@ -269,17 +269,28 @@ class TSPSolver3D():
             # Prepare positions of the viewpoints in the world
             positions = np.array([vp.pose.point.asList() for vp in viewpoints])
 
-            raise NotImplementedError('[STUDENTS TODO] KMeans clustering of viewpoints not implemented. You have to finish it on your own')
+            #raise NotImplementedError('[STUDENTS TODO] KMeans clustering of viewpoints not implemented. You have to finish it on your own')
             # Tips:
             #  - utilize sklearn.cluster.KMeans implementation (https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
             #  - after finding the labels, you may want to swap the classes (e.g., by looking at the distance of the UAVs from the cluster centers)
             #  - Find the start poses of the UAVs in problem.start_poses.position.{x,y,z}
 
             # TODO: fill 1D list 'labels' of size len(viewpoints) with indices of the robots
-            labels = [randint(0, k - 1) for vp in viewpoints]
+            
+            kmeans = KMeans(n_clusters=k, n_init=50).fit(positions)
+            labels = kmeans.labels_
+            pos0 = [problem.start_poses[0].position.x, problem.start_poses[0].position.y, problem.start_poses[0].position.z]
+            pos1 = [problem.start_poses[1].position.x, problem.start_poses[1].position.y, problem.start_poses[1].position.z]
+
+            # print(problem.start_poses[0].position, problem.start_poses[1].position, kmeans.cluster_centers_[0], kmeans.cluster_centers_[1])
+            # if np.sqrt(np.sum((pos0 - kmeans.cluster_centers_[0])**2)) > np.sqrt(np.sum((pos0 - kmeans.cluster_centers_[1])**2)) and np.sqrt(np.sum((pos1 - kmeans.cluster_centers_[1])**2)) > np.sqrt(np.sum((pos1 - kmeans.cluster_centers_[0])**2)):
+            #     labels = (labels - 1) * (-1)
+
+            
 
         ## | -------------------- Random clustering ------------------- |
         else:
+            
             labels = [randint(0, k - 1) for vp in viewpoints]
 
         # Store as clusters (2D array of viewpoints)
